@@ -1,10 +1,12 @@
 use anyhow::Result;
-use aleo_rust_sdk::{AleoClient};
+use aleo_rust_sdk::record::RecordManager;
+use aleo_rust_sdk::{AleoClient, AleoHttpClient};
 use snarkvm::console::program::ProgramID;
 use snarkvm::prelude::{PrivateKey, TestnetV0, FromStr};
 
 pub async fn run(node: &str, pk_opt: &Option<String>, to: &str, amount: u64, mode: &str) -> Result<()> {
-    let pk_str = pk_opt.as_ref()
+    let pk_str = pk_opt
+        .as_ref()
         .ok_or_else(|| anyhow::anyhow!("--private-key (or ALEO_PRIVATE_KEY env) required for transfers"))?;
 
     let private_key = PrivateKey::<TestnetV0>::from_str(pk_str)?;
@@ -31,7 +33,6 @@ async fn transfer_public(
     amount: u64,
 ) -> Result<()> {
     let mut client = AleoClient::new(node)?;
-    // Need pk_str as string for set_account
     client.set_account_from_private_key_str(&private_key.to_string())?;
 
     println!("\n📝 Step 1 — Dry-run: executing transfer_public locally...");
@@ -46,18 +47,19 @@ async fn transfer_public(
     println!("\n📡 Step 2 — Full pipeline: proving and broadcasting...");
     let program_id = ProgramID::from_str("credits.aleo")?;
 
-    let tx_id = client.execute_and_broadcast(
-        private_key,
-        &program_id,
-        "transfer_public",
-        vec![to, &format!("{amount}u64")],
-        100_000,  // base fee
-        0,        // priority fee
-    ).await?;
+    let tx_id = client
+        .execute_and_broadcast(
+            private_key,
+            &program_id,
+            "transfer_public",
+            vec![to, &format!("{amount}u64")],
+            100_000, // base fee
+            0,       // priority fee
+        )
+        .await?;
 
     println!("\n🎉 Transaction: {tx_id}");
     println!("🔗 https://testnet.explorer.provable.com/transaction/{tx_id}");
-
     println!("\n⏳ Waiting for confirmation...");
     client.network.wait_for_confirmation(&tx_id).await?;
     println!("✅ Transfer complete!");
@@ -72,28 +74,34 @@ async fn transfer_private(
 ) -> Result<()> {
     let mut client = AleoClient::new(node)?;
     client.set_account_from_private_key_str(&private_key.to_string())?;
+    let account = client.require_account()?;
 
-    // Step 1: Find unspent private credits records
+    // Step 1: Scan for unspent private records using RecordManager
     println!("\n📡 Step 1 — Scanning for unspent private records...");
-    let records = client.find_private_credits_records().await?;
+    let http_client = AleoHttpClient::new(node)?;
+    let view_key_str = account.view_key.to_string();
+    let mut mgr = RecordManager::new(http_client, &view_key_str)?;
+    let records = mgr.scan().await?;
 
-    if records.is_empty() {
+    let unspent: Vec<_> = records
+        .iter()
+        .filter(|r| r.program_id == "credits.aleo" && !r.spent)
+        .collect();
+
+    if unspent.is_empty() {
         anyhow::bail!("No private credits.aleo records found. Fund your address first or use 'public' mode.");
     }
 
-    println!("Found {} private record(s):", records.len());
-    for (i, (_cipher, amt)) in records.iter().enumerate() {
-        println!("  [{i}] {:.6} credits ({amt} microcredits)", *amt as f64 / 1_000_000.0);
+    println!("Found {} unspent record(s):", unspent.len());
+    for (i, rec) in unspent.iter().enumerate() {
+        println!("  [{i}] {:.6} credits ({})", rec.microcredits as f64 / 1_000_000.0, rec.ciphertext.get(..40).unwrap_or("…"));
     }
 
-    // Find the first record with enough credits (records are sorted descending)
-    let target_record = records.into_iter().find(|(_c, amt)| *amt >= amount)
-        .ok_or_else(|| anyhow::anyhow!(
-            "No single record has enough credits. Need {amount}, largest found record insufficient. \
-             Use 'public' to consolidate or fund with smaller amounts."
-        ))?;
-
-    let (record_ciphertext, record_amount) = target_record;
+    // Coin selection: find a single record with enough credits
+    let selection = mgr.select_records(amount)?;
+    let target = &selection.records[0]; // largest-first
+    let record_ciphertext = target.ciphertext.clone();
+    let record_amount = target.microcredits;
 
     println!("\n✅ Selected record with {:.6} credits", record_amount as f64 / 1_000_000.0);
     println!("   Record ciphertext (first 80 chars): {}...", &record_ciphertext[..record_ciphertext.len().min(80)]);
@@ -112,14 +120,20 @@ async fn transfer_private(
     println!("\n📡 Step 3 — Proving and broadcasting...");
     let program_id = ProgramID::from_str("credits.aleo")?;
 
-    let tx_id = client.execute_and_broadcast(
-        private_key,
-        &program_id,
-        "transfer_private",
-        vec![&record_ciphertext, to, &format!("{amount}u64")],
-        100_000,  // base fee
-        0,        // priority fee
-    ).await?;
+    let tx_id = client
+        .execute_and_broadcast(
+            private_key,
+            &program_id,
+            "transfer_private",
+            vec![&record_ciphertext, to, &format!("{amount}u64")],
+            100_000, // base fee
+            0,       // priority fee
+        )
+        .await?;
+
+    // Mark the record as spent
+    mgr.mark_spent(&record_ciphertext);
+    println!("   (updated local cache: record marked spent)");
 
     println!("\n🎉 Transaction: {tx_id}");
     println!("🔗 https://testnet.explorer.provable.com/transaction/{tx_id}");

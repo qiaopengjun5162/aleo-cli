@@ -5,7 +5,7 @@ edition = "2021"
 description = "CLI tool for Aleo blockchain — balance checks, private/public transfers, and network queries"
 
 [dependencies]
-aleo-rust-sdk = "0.2.0"
+aleo-rust-sdk = { path = "../aleo-rust-sdk" }
 anyhow = "1.0"
 clap = { version = "4", features = ["derive", "env"] }
 snarkvm = { version = "4.10.0", default-features = true, features = [

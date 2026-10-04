@@ -32,9 +32,7 @@ dependencies = [
 
 [[package]]
 name = "aleo-rust-sdk"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff8e4aa468772f98477ab671300a98bfa5edd1b85f1d86f5c62bc37b78249062"
+version = "0.3.0-dev"
 dependencies = [
  "anyhow",
  "async-trait",

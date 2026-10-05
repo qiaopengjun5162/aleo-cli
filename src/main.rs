@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 mod commands;
-use commands::{balance, deploy, exec, generate, query, transfer};
+use commands::{balance, deploy, exec, generate, query, transfer, verify};
 
 /// Aleo CLI — interact with the Aleo blockchain from your terminal.
 #[derive(Parser)]
@@ -66,6 +66,17 @@ enum Commands {
         /// Priority fee in microcredits
         #[arg(long, default_value = "0")]
         priority_fee: u64,
+        /// Run locally only, no proof, no broadcast (equivalent to JS SDK run() without proveExecution)
+        #[arg(long)]
+        local: bool,
+        /// Prove locally, no broadcast (equivalent to JS SDK run() with proveExecution=true)
+        #[arg(long)]
+        prove: bool,
+    },
+    /// Verify a transaction on chain (equivalent to JS SDK getTransaction)
+    Verify {
+        /// Transaction ID (e.g. at1...)
+        tx_id: String,
     },
 }
 
@@ -91,8 +102,14 @@ async fn main() -> Result<()> {
         Commands::Deploy { program_path, program_name, priority_fee } => {
             deploy::run(&cli.node, &cli.private_key, program_path, program_name, *priority_fee).await?;
         }
-        Commands::Exec { program_id, function_name, inputs, base_fee, priority_fee } => {
-            exec::run(&cli.node, &cli.private_key, program_id, function_name, inputs, *base_fee, *priority_fee).await?;
+        Commands::Exec { program_id, function_name, inputs, base_fee, priority_fee, local, prove } => {
+            if *local && *prove {
+                anyhow::bail!("Cannot use --local and --prove together. Choose one mode.");
+            }
+            exec::run(&cli.node, &cli.private_key, program_id, function_name, inputs, *base_fee, *priority_fee, *local, *prove).await?;
+        }
+        Commands::Verify { tx_id } => {
+            verify::run(&cli.node, tx_id).await?;
         }
     }
 

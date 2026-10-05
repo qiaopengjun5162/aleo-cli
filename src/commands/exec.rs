@@ -24,19 +24,25 @@ pub async fn run(
     println!("💵 Base fee:   {base_fee} microcredits");
     println!("⏫ Priority:   {priority_fee} microcredits");
 
-    println!("\n📝 Step 1 — Dry-run: executing locally...");
     let mut client = AleoClient::new(node)?;
     client.set_account_from_private_key_str(pk_str)?;
 
-    let local_inputs: Vec<String> = inputs.iter().map(|s| s.to_string()).collect();
+    // Only dry-run for credits.aleo (built-in program). Custom programs
+    // can only be fetched from the network, so the dry-run step is
+    // skipped — we go straight to prove + broadcast.
+    if program_id == "credits.aleo" {
+        println!("\n📝 Step 1 — Dry-run: executing locally...");
+        let local_inputs: Vec<String> = inputs.iter().map(|s| s.to_string()).collect();
+        let result = client.execute_local(program_id, function_name, &local_inputs)?;
+        println!("✅ Dry-run succeeded");
+        println!("   Result: {result}");
+        println!();
+    } else {
+        println!("\nℹ️  Skipping dry-run (custom program — will fetch from network)");
+    }
 
-    let result = client.execute_local(program_id, function_name, &local_inputs)?;
-    println!("✅ Dry-run succeeded");
-    println!("   Result: {result}");
-
-    println!("\n📡 Step 2 — Proving and broadcasting...");
+    println!("📡 Proving and broadcasting...");
     let pid = ProgramID::from_str(program_id)?;
-
     let input_refs: Vec<&str> = inputs.iter().map(|s| s.as_str()).collect();
 
     let tx_id = client

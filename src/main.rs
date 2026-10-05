@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 mod commands;
-use commands::{balance, query, transfer};
+use commands::{balance, deploy, exec, generate, query, transfer};
 
 /// Aleo CLI — interact with the Aleo blockchain from your terminal.
 #[derive(Parser)]
@@ -40,6 +40,33 @@ enum Commands {
     },
     /// Query Aleo testnet state
     Query,
+    /// Generate a new Aleo account (private key, view key, address)
+    Generate,
+    /// Deploy a .aleo program to the network
+    Deploy {
+        /// Path to the .aleo program source file
+        program_path: String,
+        /// Program name (without .aleo suffix)
+        program_name: String,
+        /// Optional priority fee in microcredits
+        #[arg(long)]
+        priority_fee: Option<u64>,
+    },
+    /// Execute a program function on-chain
+    Exec {
+        /// Program ID (e.g. credits.aleo)
+        program_id: String,
+        /// Function name (e.g. transfer_public)
+        function_name: String,
+        /// Input arguments
+        inputs: Vec<String>,
+        /// Base fee in microcredits
+        #[arg(long, default_value = "100000")]
+        base_fee: u64,
+        /// Priority fee in microcredits
+        #[arg(long, default_value = "0")]
+        priority_fee: u64,
+    },
 }
 
 #[tokio::main]
@@ -57,6 +84,15 @@ async fn main() -> Result<()> {
         }
         Commands::Query => {
             query::run(&cli.node).await?;
+        }
+        Commands::Generate => {
+            generate::run()?;
+        }
+        Commands::Deploy { program_path, program_name, priority_fee } => {
+            deploy::run(&cli.node, &cli.private_key, program_path, program_name, *priority_fee).await?;
+        }
+        Commands::Exec { program_id, function_name, inputs, base_fee, priority_fee } => {
+            exec::run(&cli.node, &cli.private_key, program_id, function_name, inputs, *base_fee, *priority_fee).await?;
         }
     }
 

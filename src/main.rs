@@ -73,10 +73,13 @@ enum Commands {
         #[arg(long)]
         prove: bool,
     },
-    /// Verify a transaction on chain (equivalent to JS SDK getTransaction)
+    /// Verify a transaction on chain (equivalent to JS SDK getTransaction / verifyExecution)
     Verify {
         /// Transaction ID (e.g. at1...)
         tx_id: String,
+        /// Verify the ZK proof locally (equivalent to JS SDK verifyExecution)
+        #[arg(long)]
+        deep: bool,
     },
 }
 
@@ -108,8 +111,8 @@ async fn main() -> Result<()> {
             }
             exec::run(&cli.node, &cli.private_key, program_id, function_name, inputs, *base_fee, *priority_fee, *local, *prove).await?;
         }
-        Commands::Verify { tx_id } => {
-            verify::run(&cli.node, tx_id).await?;
+        Commands::Verify { tx_id, deep } => {
+            verify::run(&cli.node, tx_id, *deep).await?;
         }
     }
 

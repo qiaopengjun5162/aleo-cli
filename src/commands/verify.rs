@@ -5,15 +5,15 @@ use serde_json::Value;
 pub async fn run(
     node: &str,
     tx_id: &str,
+    deep: bool,
 ) -> Result<()> {
     let client = AleoClient::new(node)?;
 
     println!("=== Aleo Verify ===\n");
     println!("🔍 Transaction: {tx_id}");
 
+    // Show basic info first
     let raw = client.network.fetch_transaction(tx_id).await?;
-
-    // Parse JSON to extract type and status
     let v: Value = serde_json::from_str(&raw)?;
     let tx_type = v.get("type").and_then(|t| t.as_str()).unwrap_or("unknown");
     let status = v.get("status").and_then(|s| s.as_str()).unwrap_or("confirmed");
@@ -25,7 +25,7 @@ pub async fn run(
         println!("👤 Owner:  {}", &owner[..20.min(owner.len())]);
     }
 
-    // Print execution info if available
+    // Print execution info
     if let Some(execution) = v.get("execution") {
         if let Some(transitions) = execution.get("transitions").and_then(|t| t.as_array()) {
             for (i, t) in transitions.iter().enumerate() {
@@ -43,13 +43,21 @@ pub async fn run(
         }
     }
 
-    // Print deployment info if applicable
+    // Print deployment info
     if let Some(deployment) = v.get("deployment") {
         if let Some(pid) = deployment.get("program_id").and_then(|p| p.as_str()) {
             println!("\n📦 Deployed program: {pid}");
         }
     }
 
-    println!("\n✅ Transaction exists on chain — valid");
+    if deep {
+        println!("\n🔬 Deep verification (proof) enabled...");
+        let result = client.verify_execution(tx_id).await?;
+        println!("\n{result}");
+    } else {
+        println!("\n✅ Transaction exists on chain");
+        println!("   Use --deep to also verify the ZK proof locally");
+    }
+
     Ok(())
 }

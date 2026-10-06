@@ -1,7 +1,7 @@
-use anyhow::Result;
 use aleo_rust_sdk::AleoClient;
+use anyhow::Result;
 use snarkvm::console::program::ProgramID;
-use snarkvm::prelude::{PrivateKey, FromStr};
+use snarkvm::prelude::{FromStr, PrivateKey};
 
 #[allow(clippy::too_many_arguments)]
 pub async fn run(
@@ -15,9 +15,9 @@ pub async fn run(
     local_only: bool,
     prove_only: bool,
 ) -> Result<()> {
-    let pk_str = pk_opt
-        .as_ref()
-        .ok_or_else(|| anyhow::anyhow!("--private-key (or ALEO_PRIVATE_KEY env) required for execution"))?;
+    let pk_str = pk_opt.as_ref().ok_or_else(|| {
+        anyhow::anyhow!("--private-key (or ALEO_PRIVATE_KEY env) required for execution")
+    })?;
 
     let mut client = AleoClient::new(node)?;
     client.set_account_from_private_key_str(pk_str)?;
@@ -31,7 +31,9 @@ pub async fn run(
 
     // ── Mode 1: --local (no proof, no broadcast) ──────────────────────
     if local_only {
-        println!("💡 Mode:       local (no proof — equivalent to JS SDK run() without proveExecution)");
+        println!(
+            "💡 Mode:       local (no proof — equivalent to JS SDK run() without proveExecution)"
+        );
         // Load program into client for non-credits programs
         if program_id != "credits.aleo" {
             let program = client.network.fetch_program(program_id).await?;
@@ -51,12 +53,21 @@ pub async fn run(
 
     // ── Mode 2: --prove (prove locally, no broadcast) ────────────────
     if prove_only {
-        println!("💡 Mode:       local with proof (equivalent to JS SDK run() with proveExecution=true)");
+        println!(
+            "💡 Mode:       local with proof (equivalent to JS SDK run() with proveExecution=true)"
+        );
         println!("💵 Base fee:   {base_fee} microcredits");
         println!("⏫ Priority:   {priority_fee} microcredits");
 
         let tx_json = client
-            .prove_execution(&PrivateKey::from_str(pk_str)?, &pid, function_name, input_refs, base_fee, priority_fee)
+            .prove_execution(
+                &PrivateKey::from_str(pk_str)?,
+                &pid,
+                function_name,
+                input_refs,
+                base_fee,
+                priority_fee,
+            )
             .await?;
 
         println!("\n✅ Proof generated (not broadcast)");
@@ -81,7 +92,14 @@ pub async fn run(
 
     println!("\n📡 Proving and broadcasting...");
     let tx_id = client
-        .execute_and_broadcast(&PrivateKey::from_str(pk_str)?, &pid, function_name, input_refs, base_fee, priority_fee)
+        .execute_and_broadcast(
+            &PrivateKey::from_str(pk_str)?,
+            &pid,
+            function_name,
+            input_refs,
+            base_fee,
+            priority_fee,
+        )
         .await?;
 
     println!("\n🎉 Transaction: {tx_id}");

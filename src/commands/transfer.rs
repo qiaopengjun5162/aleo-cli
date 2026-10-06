@@ -1,20 +1,31 @@
-use anyhow::Result;
 use aleo_rust_sdk::record::RecordManager;
 use aleo_rust_sdk::{AleoClient, AleoHttpClient};
-use snarkvm::console::program::ProgramID;
-use snarkvm::prelude::{PrivateKey, TestnetV0, FromStr};
+use anyhow::Result;
+use snarkvm::console::program::{
+    Ciphertext as SnarkCiphertext, ProgramID, Record as SnarkRecord, Value,
+};
+use snarkvm::prelude::{FromStr, PrivateKey, TestnetV0, ViewKey};
 
-pub async fn run(node: &str, pk_opt: &Option<String>, to: &str, amount: u64, mode: &str) -> Result<()> {
-    let pk_str = pk_opt
-        .as_ref()
-        .ok_or_else(|| anyhow::anyhow!("--private-key (or ALEO_PRIVATE_KEY env) required for transfers"))?;
+pub async fn run(
+    node: &str,
+    pk_opt: &Option<String>,
+    to: &str,
+    amount: u64,
+    mode: &str,
+) -> Result<()> {
+    let pk_str = pk_opt.as_ref().ok_or_else(|| {
+        anyhow::anyhow!("--private-key (or ALEO_PRIVATE_KEY env) required for transfers")
+    })?;
 
     let private_key = PrivateKey::<TestnetV0>::from_str(pk_str)?;
 
     println!("=== Aleo Transfer ===");
     println!("🔑 From: (derived from private key)");
     println!("📬 To:   {to}");
-    println!("💵 Amount: {amount} microcredits ({:.6} credits)", amount as f64 / 1_000_000.0);
+    println!(
+        "💵 Amount: {amount} microcredits ({:.6} credits)",
+        amount as f64 / 1_000_000.0
+    );
     println!("🔀 Mode:  {mode}");
 
     match mode {
@@ -81,7 +92,7 @@ async fn transfer_private(
     let http_client = AleoHttpClient::new(node)?;
     let view_key_str = account.view_key.to_string();
     let mut mgr = RecordManager::new(http_client, &view_key_str)?;
-    let records = mgr.scan().await?;
+    let records = mgr.scan_recent(5_000).await?;
 
     let unspent: Vec<_> = records
         .iter()
@@ -89,12 +100,18 @@ async fn transfer_private(
         .collect();
 
     if unspent.is_empty() {
-        anyhow::bail!("No private credits.aleo records found. Fund your address first or use 'public' mode.");
+        anyhow::bail!(
+            "No private credits.aleo records found. Fund your address first or use 'public' mode."
+        );
     }
 
     println!("Found {} unspent record(s):", unspent.len());
     for (i, rec) in unspent.iter().enumerate() {
-        println!("  [{i}] {:.6} credits ({})", rec.microcredits as f64 / 1_000_000.0, rec.ciphertext.get(..40).unwrap_or("…"));
+        println!(
+            "  [{i}] {:.6} credits ({})",
+            rec.microcredits as f64 / 1_000_000.0,
+            rec.ciphertext.get(..40).unwrap_or("…")
+        );
     }
 
     // Coin selection: find a single record with enough credits
@@ -103,29 +120,35 @@ async fn transfer_private(
     let record_ciphertext = target.ciphertext.clone();
     let record_amount = target.microcredits;
 
-    println!("\n✅ Selected record with {:.6} credits", record_amount as f64 / 1_000_000.0);
-    println!("   Record ciphertext (first 80 chars): {}...", &record_ciphertext[..record_ciphertext.len().min(80)]);
+    println!(
+        "\n✅ Selected record with {:.6} credits",
+        record_amount as f64 / 1_000_000.0
+    );
+    println!(
+        "   Record ciphertext (first 80 chars): {}...",
+        &record_ciphertext[..record_ciphertext.len().min(80)]
+    );
 
-    // Step 2: Dry-run transfer_private locally
-    println!("\n📝 Step 2 — Dry-run: executing transfer_private locally...");
-    let result = client.execute_local(
-        "credits.aleo",
-        "transfer_private",
-        &[record_ciphertext.clone(), to.to_string(), format!("{amount}u64")],
-    )?;
-    println!("✅ Dry-run succeeded");
-    println!("{:?}", result);
-
-    // Step 3: Prove and broadcast
-    println!("\n📡 Step 3 — Proving and broadcasting...");
+    println!("\n📡 Step 2 — Proving and broadcasting (dry-run skipped for private)...");
     let program_id = ProgramID::from_str("credits.aleo")?;
 
+    // Decrypt the selected record for use as a Value input
+    let view_key = ViewKey::try_from(private_key)?;
+    let ciphertext_record =
+        SnarkRecord::<TestnetV0, SnarkCiphertext<TestnetV0>>::from_str(&record_ciphertext)?;
+    let plaintext_record = ciphertext_record.decrypt(&view_key)?;
+    let record_value = Value::Record(plaintext_record);
+
     let tx_id = client
-        .execute_and_broadcast(
+        .execute_and_broadcast_with_values(
             private_key,
             &program_id,
             "transfer_private",
-            vec![&record_ciphertext, to, &format!("{amount}u64")],
+            vec![
+                record_value,
+                Value::from_str(to)?,
+                Value::from_str(&format!("{amount}u64"))?,
+            ],
             100_000, // base fee
             0,       // priority fee
         )

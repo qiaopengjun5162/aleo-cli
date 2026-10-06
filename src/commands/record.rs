@@ -1,5 +1,5 @@
-use anyhow::Result;
 use aleo_rust_sdk::{AleoClient, AleoHttpClient};
+use anyhow::Result;
 
 /// Aleo-cli record command — inspect private records.
 pub async fn run(
@@ -14,10 +14,8 @@ pub async fn run(
     let account = client.require_account()?;
     let http_client = AleoHttpClient::new(node)?;
 
-    let mut mgr = aleo_rust_sdk::record::RecordManager::new(
-        http_client,
-        &account.view_key.to_string(),
-    )?;
+    let mut mgr =
+        aleo_rust_sdk::record::RecordManager::new(http_client, &account.view_key.to_string())?;
 
     if !no_refresh {
         println!("🔍 Scanning chain for private records (recent 5K blocks)...");
@@ -45,12 +43,16 @@ pub async fn run(
         .map(|r| r.microcredits)
         .sum();
 
+    println!("🔑 Address:  {}", account.address_str());
     println!(
-        "🔑 Address:  {}",
-        account.address_str()
+        "📦 Records:  {} found, {} shown",
+        all_records.len(),
+        filtered.len()
     );
-    println!("📦 Records:  {} found, {} shown", all_records.len(), filtered.len());
-    println!("💰 Balance:  {:.6} credits ({total} microcredits)", total as f64 / 1_000_000.0);
+    println!(
+        "💰 Balance:  {:.6} credits ({total} microcredits)",
+        total as f64 / 1_000_000.0
+    );
     println!();
 
     if filtered.is_empty() {
@@ -66,7 +68,10 @@ pub async fn run(
             rec.program_id,
         );
         println!("     owner:     {}", rec.owner);
-        println!("     ciphertext: {}…", &rec.ciphertext[..std::cmp::min(60, rec.ciphertext.len())]);
+        println!(
+            "     ciphertext: {}…",
+            &rec.ciphertext[..std::cmp::min(60, rec.ciphertext.len())]
+        );
         if !rec.data.is_empty() {
             for (k, v) in &rec.data {
                 println!("     {k}: {v}");

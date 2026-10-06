@@ -1,12 +1,8 @@
-use anyhow::Result;
 use aleo_rust_sdk::AleoClient;
+use anyhow::Result;
 use serde_json::Value;
 
-pub async fn run(
-    node: &str,
-    tx_id: &str,
-    deep: bool,
-) -> Result<()> {
+pub async fn run(node: &str, tx_id: &str, deep: bool) -> Result<()> {
     let client = AleoClient::new(node)?;
 
     println!("=== Aleo Verify ===\n");
@@ -16,12 +12,19 @@ pub async fn run(
     let raw = client.network.fetch_transaction(tx_id).await?;
     let v: Value = serde_json::from_str(&raw)?;
     let tx_type = v.get("type").and_then(|t| t.as_str()).unwrap_or("unknown");
-    let status = v.get("status").and_then(|s| s.as_str()).unwrap_or("confirmed");
+    let status = v
+        .get("status")
+        .and_then(|s| s.as_str())
+        .unwrap_or("confirmed");
 
     println!("📋 Type:   {tx_type}");
     println!("📋 Status: {status}");
 
-    if let Some(owner) = v.get("owner").and_then(|o| o.get("address")).and_then(|a| a.as_str()) {
+    if let Some(owner) = v
+        .get("owner")
+        .and_then(|o| o.get("address"))
+        .and_then(|a| a.as_str())
+    {
         println!("👤 Owner:  {}", &owner[..20.min(owner.len())]);
     }
 
@@ -30,7 +33,10 @@ pub async fn run(
         if let Some(transitions) = execution.get("transitions").and_then(|t| t.as_array()) {
             for (i, t) in transitions.iter().enumerate() {
                 let pid = t.get("program_id").and_then(|p| p.as_str()).unwrap_or("?");
-                let fn_name = t.get("function_name").and_then(|f| f.as_str()).unwrap_or("?");
+                let fn_name = t
+                    .get("function_name")
+                    .and_then(|f| f.as_str())
+                    .unwrap_or("?");
                 println!("\n🔧 Transition #{i}: {pid}::{fn_name}");
                 if let Some(inputs) = t.get("inputs").and_then(|i| i.as_array()) {
                     for inp in inputs {

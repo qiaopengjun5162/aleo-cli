@@ -1,5 +1,5 @@
-use anyhow::Result;
 use aleo_rust_sdk::AleoHttpClient;
+use anyhow::Result;
 
 pub async fn run(node: &str) -> Result<()> {
     let client = AleoHttpClient::new(node)?;
@@ -22,7 +22,10 @@ pub async fn run(node: &str) -> Result<()> {
 
     // Known faucet address
     let faucet = "aleo1dev793afmhq2xwuv9k7uxrxxwljhyf9hysp883hs7p2ryq5z7pqsk2hp35";
-    match client.fetch_mapping_value("credits.aleo", "account", faucet).await {
+    match client
+        .fetch_mapping_value("credits.aleo", "account", faucet)
+        .await
+    {
         Ok(Some(b)) => println!("💰 Faucet balance:  {b} microcredits"),
         Ok(None) => println!("💰 Faucet balance:  none (private only)"),
         Err(e) => println!("⚠️  Faucet query:   {e}"),

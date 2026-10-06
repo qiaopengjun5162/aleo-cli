@@ -1,5 +1,5 @@
-use anyhow::Result;
 use aleo_rust_sdk::AleoAccount;
+use anyhow::Result;
 use snarkvm::prelude::TestRng;
 
 pub fn run() -> Result<()> {

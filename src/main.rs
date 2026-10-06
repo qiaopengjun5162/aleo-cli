@@ -114,22 +114,56 @@ async fn main() -> Result<()> {
         Commands::Generate => {
             generate::run()?;
         }
-        Commands::Deploy { program_path, program_name, priority_fee } => {
-            deploy::run(&cli.node, &cli.private_key, program_path, program_name, *priority_fee).await?;
+        Commands::Deploy {
+            program_path,
+            program_name,
+            priority_fee,
+        } => {
+            deploy::run(
+                &cli.node,
+                &cli.private_key,
+                program_path,
+                program_name,
+                *priority_fee,
+            )
+            .await?;
         }
-        Commands::Exec { program_id, function_name, inputs, base_fee, priority_fee, local, prove } => {
+        Commands::Exec {
+            program_id,
+            function_name,
+            inputs,
+            base_fee,
+            priority_fee,
+            local,
+            prove,
+        } => {
             if *local && *prove {
                 anyhow::bail!("Cannot use --local and --prove together. Choose one mode.");
             }
-            exec::run(&cli.node, &cli.private_key, program_id, function_name, inputs, *base_fee, *priority_fee, *local, *prove).await?;
+            exec::run(
+                &cli.node,
+                &cli.private_key,
+                program_id,
+                function_name,
+                inputs,
+                *base_fee,
+                *priority_fee,
+                *local,
+                *prove,
+            )
+            .await?;
         }
         Commands::Verify { tx_id, deep } => {
             verify::run(&cli.node, tx_id, *deep).await?;
         }
-        Commands::Record { program, include_spent, no_refresh } => {
-            let pk = cli.private_key.ok_or_else(|| {
-                anyhow::anyhow!("--private-key required for record scanning")
-            })?;
+        Commands::Record {
+            program,
+            include_spent,
+            no_refresh,
+        } => {
+            let pk = cli
+                .private_key
+                .ok_or_else(|| anyhow::anyhow!("--private-key required for record scanning"))?;
             record::run(
                 &cli.node,
                 &pk,

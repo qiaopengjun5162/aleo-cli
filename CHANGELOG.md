@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-10-06
+
+### Features
+
+- `transfer_private` — fully working private transfer with real-time Merkle path fetching and correct inclusion proving (InclusionVersion::V1)
+- Uses `scan_recent(5_000)` for faster record scanning
+
+### Bug Fixes
+
+- `transfer_private` no longer panics on `verify_batch` — root cause was `InclusionVersion::V0` vs V1 mismatch with `ConsensusVersion::V14`
+
+### Notes
+
+- Built on aleo-rust-sdk v0.5.0
+- `transfer_private` tested against real Aleo Testnet ✅
+
 ## [0.2.0] - 2026-10-06
 
 ### Features

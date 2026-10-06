@@ -1,5 +1,5 @@
-use anyhow::Result;
 use aleo_rust_sdk::AleoClient;
+use anyhow::Result;
 use std::fs;
 
 pub async fn run(
@@ -9,9 +9,9 @@ pub async fn run(
     program_name: &str,
     priority_fee: Option<u64>,
 ) -> Result<()> {
-    let _pk_str = pk_opt
-        .as_ref()
-        .ok_or_else(|| anyhow::anyhow!("--private-key (or ALEO_PRIVATE_KEY env) required for deploy"))?;
+    let _pk_str = pk_opt.as_ref().ok_or_else(|| {
+        anyhow::anyhow!("--private-key (or ALEO_PRIVATE_KEY env) required for deploy")
+    })?;
 
     println!("=== Aleo Deploy ===\n");
 

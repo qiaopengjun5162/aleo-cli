@@ -1,0 +1,46 @@
+fail_fast: false
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit, manual]
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-byte-order-marker
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-yaml
+      - id: end-of-file-fixer
+        exclude: \.svg$
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+        exclude: \.svg$
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt
+        description: Format Rust code with rustfmt.
+        entry: bash -c 'cargo fmt --all -- --check'
+        language: system
+        types: [rust]
+      - id: cargo-check
+        name: cargo check
+        description: Check Rust code for errors.
+        entry: bash -c 'cargo check --all-features'
+        language: system
+        types: [rust]
+        pass_filenames: false
+      - id: cargo-clippy
+        name: cargo clippy
+        description: Lint Rust code with clippy.
+        entry: bash -c 'cargo clippy --all-features --tests --benches -- -D warnings'
+        language: system
+        types: [rust]
+        pass_filenames: false
+      - id: typos
+        name: typos
+        description: Check for typos in code.
+        entry: bash -c 'typos'
+        language: system
+        types: [rust]
+        pass_filenames: false

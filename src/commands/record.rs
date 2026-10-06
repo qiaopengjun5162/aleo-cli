@@ -20,8 +20,8 @@ pub async fn run(
     )?;
 
     if !no_refresh {
-        println!("🔍 Scanning chain for private records (up to 100K blocks)...");
-        mgr.scan().await?;
+        println!("🔍 Scanning chain for private records (recent 5K blocks)...");
+        mgr.scan_recent(5_000).await?;
     }
 
     let all_records = mgr.records();

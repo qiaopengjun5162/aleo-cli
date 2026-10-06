@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 mod commands;
-use commands::{balance, deploy, exec, generate, query, transfer, verify};
+use commands::{balance, deploy, exec, generate, query, record, transfer, verify};
 
 /// Aleo CLI — interact with the Aleo blockchain from your terminal.
 #[derive(Parser)]
@@ -81,6 +81,18 @@ enum Commands {
         #[arg(long)]
         deep: bool,
     },
+    /// Inspect private records owned by the current account
+    Record {
+        /// Optional program ID filter (e.g. credits.aleo)
+        #[arg(long)]
+        program: Option<String>,
+        /// Include spent records in output
+        #[arg(long)]
+        include_spent: bool,
+        /// Skip chain scan; just show cached records
+        #[arg(long)]
+        no_refresh: bool,
+    },
 }
 
 #[tokio::main]
@@ -113,6 +125,19 @@ async fn main() -> Result<()> {
         }
         Commands::Verify { tx_id, deep } => {
             verify::run(&cli.node, tx_id, *deep).await?;
+        }
+        Commands::Record { program, include_spent, no_refresh } => {
+            let pk = cli.private_key.ok_or_else(|| {
+                anyhow::anyhow!("--private-key required for record scanning")
+            })?;
+            record::run(
+                &cli.node,
+                &pk,
+                program.as_deref(),
+                *include_spent,
+                *no_refresh,
+            )
+            .await?;
         }
     }
 

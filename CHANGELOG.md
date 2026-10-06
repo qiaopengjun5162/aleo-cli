@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2026-10-06
+
+### Features
+
+- `record` — inspect private records with optional program filter (`--program`), spent display (`--include-spent`), and skip-scan mode (`--no-refresh`)
+
+### Improvements
+
+- Updated README with record command reference
+
 ## [0.1.0] - 2026-10-05
 
 ### Features

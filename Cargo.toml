@@ -2,10 +2,16 @@
 name = "aleo-cli"
 version = "0.1.0"
 edition = "2021"
-description = "CLI tool for Aleo blockchain — balance checks, private/public transfers, and network queries"
+description = "CLI tool for Aleo blockchain — balance, transfer, deploy, execute, local proving, ZK verification"
+homepage = "https://github.com/qiaopengjun5162/aleo-cli"
+repository = "https://github.com/qiaopengjun5162/aleo-cli"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+keywords = ["aleo", "blockchain", "cli", "zero-knowledge", "cryptocurrency"]
+categories = ["command-line-utilities", "cryptography::cryptocurrencies"]
 
 [dependencies]
-aleo-rust-sdk = { path = "../aleo-rust-sdk" }
+aleo-rust-sdk = "0.4"
 anyhow = "1.0"
 clap = { version = "4", features = ["derive", "env"] }
 snarkvm = { version = "4.10.0", default-features = true, features = [

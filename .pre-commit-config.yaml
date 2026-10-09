@@ -52,5 +52,5 @@ repos:
         language: system
         types: [rust]
         pass_filenames: false
-        stages: [pre-commit]
+        stages: [pre-push]
         verbose: false

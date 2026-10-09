@@ -2,7 +2,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 mod commands;
-use commands::{balance, deploy, exec, generate, query, record, transfer, verify};
+use commands::{balance, deploy, exec, generate, query, record, stablecoin, transfer, verify};
 
 /// Aleo CLI — interact with the Aleo blockchain from your terminal.
 #[derive(Parser)]
@@ -93,6 +93,14 @@ enum Commands {
         #[arg(long)]
         no_refresh: bool,
     },
+    /// Query stablecoin freeze list Merkle tree (USAD/USDCx)
+    Stablecoin {
+        /// Stablecoin name: usad or usdcx
+        stablecoin: String,
+        /// Optional address to generate an exclusion proof for
+        #[arg(long)]
+        prove: Option<String>,
+    },
 }
 
 #[tokio::main]
@@ -172,6 +180,9 @@ async fn main() -> Result<()> {
                 *no_refresh,
             )
             .await?;
+        }
+        Commands::Stablecoin { stablecoin, prove } => {
+            stablecoin::run(&cli.node, stablecoin, prove.as_deref()).await?;
         }
     }
 

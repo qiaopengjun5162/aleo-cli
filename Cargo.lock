@@ -62,14 +62,13 @@ dependencies = [
  "serde_json",
  "snarkvm",
  "tokio",
+ "tracing",
  "tracing-subscriber",
 ]
 
 [[package]]
 name = "aleo-rust-sdk"
 version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "710a76ec2c132297102b70828774d87cca9c403b907bb51c4d064a68e8e8883b"
 dependencies = [
  "aes-gcm",
  "anyhow",

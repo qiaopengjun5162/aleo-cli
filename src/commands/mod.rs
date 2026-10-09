@@ -4,5 +4,6 @@ pub mod exec;
 pub mod generate;
 pub mod query;
 pub mod record;
+pub mod stablecoin;
 pub mod transfer;
 pub mod verify;

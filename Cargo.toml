@@ -11,7 +11,8 @@ keywords = ["aleo", "blockchain", "cli", "zero-knowledge", "cryptocurrency"]
 categories = ["command-line-utilities", "cryptography::cryptocurrencies"]
 
 [dependencies]
-aleo-rust-sdk = "0.5.0"
+aleo-rust-sdk = { path = "../aleo-rust-sdk" }
+#aleo-rust-sdk = "0.5.0"
 anyhow = "1.0"
 clap = { version = "4", features = ["derive", "env"] }
 snarkvm = { version = "4.10.0", default-features = true, features = [
@@ -19,5 +20,11 @@ snarkvm = { version = "4.10.0", default-features = true, features = [
     "synthesizer",
 ] }
 tokio = { version = "1", features = ["full"] }
-serde_json = "1"
+serde_json = "1.0"
+tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1

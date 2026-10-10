@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.2](https://github.com/qiaopengjun5162/aleo-cli/compare/aleo-cli-v0.5.1...aleo-cli-v0.5.2) (2026-10-10)
+
+
+### Bug Fixes
+
+* PR-Agent config.* prefix + litellm OPENAI_API_BASE + deepseek_v4 ([82830ba](https://github.com/qiaopengjun5162/aleo-cli/commit/82830ba85d1362d809154349152def24f6024258))
+
 ## [0.5.1](https://github.com/qiaopengjun5162/aleo-cli/compare/aleo-cli-v0.5.0...aleo-cli-v0.5.1) (2026-10-10)
 
 

@@ -68,9 +68,9 @@ dependencies = [
 
 [[package]]
 name = "aleo-rust-sdk"
-version = "0.5.1"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5da0bc4522e1c88413a48552961cf7535050ae0abc0a441952b09a6aec46eeb4"
+checksum = "ebd3463a9b91c588ff4a7e1b1998f30ddbb4dbaf4caa845b971c649c1051b12f"
 dependencies = [
  "aes-gcm",
  "anyhow",

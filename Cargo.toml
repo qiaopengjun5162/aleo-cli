@@ -12,7 +12,7 @@ categories = ["command-line-utilities", "cryptography::cryptocurrencies"]
 
 [dependencies]
 #aleo-rust-sdk = { path = "../aleo-rust-sdk" }
-aleo-rust-sdk = "0.5.1"
+aleo-rust-sdk = "0.7.0"
 anyhow = "1.0"
 clap = { version = "4", features = ["derive", "env"] }
 snarkvm = { version = "4.10.0", default-features = true, features = [

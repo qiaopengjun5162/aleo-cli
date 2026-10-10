@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1](https://github.com/qiaopengjun5162/aleo-cli/compare/aleo-cli-v0.5.0...aleo-cli-v0.5.1) (2026-10-10)
+
+
+### Bug Fixes
+
+* set release-please draft to false and fix pr-agent entryPoint ([1c67d1d](https://github.com/qiaopengjun5162/aleo-cli/commit/1c67d1d3c740b19ac4bc4f597169ee615bec96e8))
+
 ## [0.5.0](https://github.com/qiaopengjun5162/aleo-cli/compare/aleo-cli-v0.4.0...aleo-cli-v0.5.0) (2026-10-09)
 
 

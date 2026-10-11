@@ -1,6 +1,6 @@
 [package]
 name = "aleo-cli"
-version = "0.5.1"
+version = "0.5.2"
 edition = "2021"
 description = "CLI tool for Aleo blockchain — balance, transfer, deploy, execute, local proving, ZK verification"
 homepage = "https://github.com/qiaopengjun5162/aleo-cli"
